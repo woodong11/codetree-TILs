@@ -1,4 +1,7 @@
 // 메이즈 러너
+// 걸렸던 에러 1: 벡터 out of range -> 사람들 이동하고 전부 탈출하는 경우 존재
+// 잘못 간과했던것: min 거리 사람을 뽑아도 정사각형을 만들때 거리가 다를 수 있다! 추가 정렬 필요
+
 #define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <vector>
@@ -18,9 +21,12 @@ struct squrePoint {
 };
 
 bool compare(squrePoint a, squrePoint b) {
-	if (a.y == b.y)
-		return a.x < b.x;
-	return a.y < b.y;
+	if (a.squreLen == b.squreLen) {
+		if (a.y == b.y)
+			return a.x < b.x;
+		return a.y < b.y;
+	}
+	return a.squreLen < b.squreLen;
 }
 
 int MAP[11][11];
@@ -49,17 +55,15 @@ void input(){
 
 // 모두 탈출했는지 체크
 bool allExit() {
-	int flag = 1;
-	for (int j = 1; j <= M; j++) {
-		if (isExit[j] == 0) {
-			flag = 0;
+	for (int i = 1; i <= M; i++) {
+		if (isExit[i] == 0) {
 			return false;
 		}
 	}
 	return true;
 }
 
-// 사람들 이동
+// 사람들 이동하는 함수
 void movePerson() {
 
 	for (int i = 1; i <= M; i++){
@@ -99,7 +103,8 @@ squrePoint findSqurePoint(int exitY, int exitX, int personY, int personX) {
 	int squreLen, startY, startX;
 
 	if (gapY == gapX) {
-		return { min(exitY, personY), min(exitX, personX) };
+		squreLen = gapY + 1;
+		return { min(exitY, personY), min(exitX, personX), squreLen };
 	}
 	else if (gapY > gapX) {		// y 차가 더 클때 -> startY, endY는 정해진다.
 		startY = min(exitY, personY);
@@ -144,6 +149,8 @@ void makeSqure(){
 			curPeople.push_back({ personList[i].y, personList[i].x });
 	}
 	
+	int de = -1;
+
 	// curPeople에 있는 사람들과 출구로 정사각형 경우 찾고, 정렬한다. 
 	vector <squrePoint> squrePointList;
 	for (int i = 0; i < curPeople.size(); i++){
@@ -202,10 +209,12 @@ void solve() {
 	
 	for (int i = 1; i <= K; i++){
 
-		if (allExit())
-			break;
 		movePerson();
+		if (allExit())		// 사람들이 이동하면서 다 탈출할 수 있기 때문에 allExit 체크를 여기 둠
+			break;
 		makeSqure();
+
+		int de = -1;
 	}
 
 	cout << cnt << "\n" << exitY + 1 << " " << exitX + 1;
