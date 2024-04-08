@@ -61,18 +61,19 @@ void input() {
 void findTarget() {
 	
 	// 현재 최대와 최소값 찾기
-	int minVal = 21e8, maxVal = 0;
+	int cnt = 0, minVal = 21e8, maxVal = 0;
 	for (int i = 0; i < N; i++){
 		for (int j = 0; j < M; j++){
 			if (MAP[i][j] > 0) {
 				minVal = min(minVal, MAP[i][j]);
 				maxVal = max(maxVal, MAP[i][j]);
+				cnt++;
 			}
 		}
 	}
 
 	// 만약 부서지지 않은 포탑이 1개라면 즉시 종료
-	if (minVal == maxVal){
+	if (cnt == 1){
 		isEnd = 1;
 		return;
 	}
@@ -84,7 +85,7 @@ void findTarget() {
 		for (int j = 0; j < M; j++){
 			if (MAP[i][j] == minVal)
 				attackerList.push_back({i, j, MAP[i][j], lattestAttackList[i][j]});
-			else if (MAP[i][j] == maxVal)
+			if (MAP[i][j] == maxVal)
 				targetList.push_back({ i, j, MAP[i][j], lattestAttackList[i][j] });
 		}
 	}
@@ -124,7 +125,7 @@ bool lazer() {
 			if (nx < 0)
 				nx += M;
 			if (ny >= N)
-				nx -= N;
+				ny -= N;
 			if (nx >= M)
 				nx -= M;
 
@@ -196,7 +197,7 @@ void bomb() {
 		if (nx < 0)
 			nx += M;
 		if (ny >= N)
-			nx -= N;
+			ny -= N;
 		if (nx >= M)
 			nx -= M;
 
