@@ -19,8 +19,8 @@ struct tower {
 };
 
 int N, M, K, curTurn, isEnd;
-int dy[8] = { -1, 0, 1, 0, -1, -1, 1, 1 };		// 상좌하우 먼저 만들었다. (나중에 되돌아가면서 레이저 path 찾기 위해)
-int dx[8] = { 0, -1, 0, 1, -1, 1, -1, 1 };
+int dy[8] = { 0, 1, 0, -1, -1, -1, 1, 1 };		
+int dx[8] = { 1, 0, -1, 0, -1, 1, -1, 1 };
 int MAP[11][11];
 int visited[11][11];
 int isRelated[11][11];			// 공격과 관련 있는지 저장
@@ -113,25 +113,17 @@ void findTarget() {
 bool lazer() {
 	memset(visited, 0, sizeof(visited));
 
-	for (int i = 0; i < N; i++)
-	{
-		for (int j = 0; j < M; j++)
-		{
-			visited[i][j] = 21e8;
-		}
-	}
-
 	path.clear();
 	queue <Node> q;
-	visited[attacker.y][attacker.x] = 1;
-	q.push({ attacker.y, attacker.x });
+	visited[target.y][target.x] = 1;
+	q.push({ target.y, target.x });
 
 
 	while (!q.empty()) {
 		Node now = q.front();
 		q.pop();
 
-		for (int i = 0; i < 4; i++){
+		for (int i = 0; i < 4; i++) {
 			int ny = now.y + dy[i];
 			int nx = now.x + dx[i];
 
@@ -149,25 +141,23 @@ bool lazer() {
 				continue;
 
 			int nextDist = visited[now.y][now.x] + 1;
-			if (visited[ny][nx] <= nextDist)
-				continue;
-
-			// 방문 안 했거나 갱신할 수 있을때
-			q.push({ ny, nx });
-			visited[ny][nx] = visited[now.y][now.x] + 1;
+			if (visited[ny][nx] == 0 || (visited[ny][nx] > nextDist)) {	// 방문 안 했거나 갱신할 수 있을때
+				q.push({ ny, nx });
+				visited[ny][nx] = visited[now.y][now.x] + 1;
+			}
 		}
 	}
 
 	int de = -1;
 
-	if (visited[target.y][target.x] == 21e8)	// 타겟까지 방문 못 할때는 레이저 못 쏴
+	if (visited[attacker.y][attacker.x] == 0)	// 타겟까지 방문 못 할때는 레이저 못 쏴
 		return false;
 
 
 	// 타겟에서 돌아오면서 최단거리 정하기
 	// visited가 -1인 곳을 헨젤이 과자 줍듯이 따라가면 무조건 출발지점이 나온다!!
-	int curDist = visited[target.y][target.x];
-	int curY = target.y, curX = target.x;
+	int curDist = visited[attacker.y][attacker.x];
+	int curY = attacker.y, curX = attacker.x;
 	while (curDist > 2){
 		for (int i = 0; i < 4; i++){
 			int ny = curY + dy[i];
