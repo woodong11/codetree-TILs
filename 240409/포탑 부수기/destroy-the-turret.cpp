@@ -29,27 +29,23 @@ Node attacker, target;
 vector <Node> path;				// 레이저용 패스 저장소
 
 bool compare1(tower a, tower b) {				// 공격자용
-	if (a.power == b.power) {
-		if (a.lattestAttack == b.lattestAttack) {
-			if ((a.y + a.x) == (b.y + b.x))
-				return a.x > b.x ;
-			return (a.y + a.x) > (b.y + b.x);
-		}
-		return a.lattestAttack > b.lattestAttack;
+	if (a.lattestAttack == b.lattestAttack) {
+		if ((a.y + a.x) == (b.y + b.x))
+			return a.x > b.x ;
+		return (a.y + a.x) > (b.y + b.x);
 	}
-	return a.power < b.power;
+	return a.lattestAttack > b.lattestAttack;
+
 };
 
 bool compare2(tower a, tower b) {				// 대상자용
-	if (a.power == b.power) {
-		if (a.lattestAttack == b.lattestAttack) {
-			if ((a.y + a.x) == (b.y + b.x))
-				return a.x < b.x;
-			return (a.y + a.x) < (b.y + b.x);
-		}
-		return a.lattestAttack < b.lattestAttack;
+
+	if (a.lattestAttack == b.lattestAttack) {
+		if ((a.y + a.x) == (b.y + b.x))
+			return a.x < b.x;
+		return (a.y + a.x) < (b.y + b.x);
 	}
-	return a.power > b.power;
+	return a.lattestAttack < b.lattestAttack;
 };
 
 void input() {
@@ -89,10 +85,10 @@ void findTarget() {
 		for (int j = 0; j < M; j++){
 
 			if (MAP[i][j] > 0) {
-				
-				attackerList.push_back({ i, j, MAP[i][j], lattestAttackList[i][j] });
-				
-				targetList.push_back({ i, j, MAP[i][j], lattestAttackList[i][j] });
+				if (MAP[i][j] == minVal)
+					attackerList.push_back({ i, j, MAP[i][j], lattestAttackList[i][j] });
+				if (MAP[i][j] == maxVal)
+					targetList.push_back({ i, j, MAP[i][j], lattestAttackList[i][j] });
 			}
 			
 		}
@@ -148,14 +144,12 @@ bool lazer() {
 		}
 	}
 
-	int de = -1;
-
 	if (visited[attacker.y][attacker.x] == 0)	// 타겟까지 방문 못 할때는 레이저 못 쏴
 		return false;
 
 
 	// 타겟에서 돌아오면서 최단거리 정하기
-	// visited가 -1인 곳을 헨젤이 과자 줍듯이 따라가면 무조건 출발지점이 나온다!!
+	// visited가 현재보다 -1인 곳을 헨젤이 과자 줍듯이 우선순위대로 따라가면 무조건 출발지점이 나온다!!
 	int curDist = visited[attacker.y][attacker.x];
 	int curY = attacker.y, curX = attacker.x;
 	while (curDist > 2){
@@ -172,7 +166,6 @@ bool lazer() {
 				nx += M;
 			if (nx >= M)
 				nx -= M;
-
 
 			if (MAP[ny][nx] <= 0)	// 부서진 포탑은 통과 못함
 				continue;
@@ -191,26 +184,16 @@ bool lazer() {
 	// 레이저 지지기
 	int attackPower = MAP[attacker.y][attacker.x];
 	MAP[target.y][target.x] -= attackPower;
-
-	/*if (MAP[target.y][target.x] < 0)
-		MAP[target.y][target.x] = 0;*/
 	attackPower = attackPower / 2;
 	for (auto Point : path){
 		MAP[Point.y][Point.x] -= attackPower;
-		//if (MAP[Point.y][Point.x] < 0)
-		//	MAP[Point.y][Point.x] = 0;
 	}
-
 	return true;
 }
 
 void bomb() {
 	int attackPower = MAP[attacker.y][attacker.x] / 2;
-
-	// 피해받되, 디버깅을 위해 -라면 0으로 만들어보자
 	MAP[target.y][target.x] -= MAP[attacker.y][attacker.x];
-	//if (MAP[target.y][target.x] < 0)
-	//	MAP[target.y][target.x] = 0;
 	for (int i = 0; i < 8; i++){
 		int ny = target.y + dy[i];
 		int nx = target.x + dx[i];
@@ -230,8 +213,6 @@ void bomb() {
 
 		MAP[ny][nx] -= attackPower;
 		isRelated[ny][nx] = 1;
-		//if (MAP[ny][nx] < 0)
-		//	MAP[ny][nx] = 0;
 	}
 }
 
