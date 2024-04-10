@@ -67,11 +67,12 @@ bool destCompare(Node a, Node b) {
 	return a.y + a.x > b.y + b.x;
 }
 
-int command[4001][3];									// 커맨드 저장 배열
+int command[4003][3];									// 커맨드 저장 배열
 priority_queue <rabbit, vector<rabbit>, compare > pq;	// 토끼 저장 pq
 unordered_map <int, int> distList;						// pid에 해당하는 토끼 이동거리 빠르게 접근을 위함
 unordered_map <int, long long> scoreList;				// 나중에 maxScore에서 빼줄꺼임
 unordered_map <int, long long> sList;					// 해당 토끼마다 받은 S점수 저장
+unordered_map <int, rabbit> jumpedRabbit;
 
 void input() {
 	cin >> Q;
@@ -147,10 +148,9 @@ Node findDestination(rabbit curRabbit, int nowDist) {
 
 // 경주 진행 
 void move() {
+	jumpedRabbit.clear();
 
-	unordered_map <int, rabbit> jumpedRabbit;
-
-	for (int i = 0; i < K; i++){	
+	for (int i = 0; i < K; i++){				// K
 		rabbit moveRabbit = pq.top();
 		pq.pop();
 
@@ -161,7 +161,7 @@ void move() {
 		maxScore += (destPos.y + destPos.x) + 2;				// 최고 점수 업데이트
 
 		// 점프한 토끼 위치 pq에 다시 저장하고 점수 업데이트
-		moveRabbit = { destPos.y, destPos.x, moveRabbit.pid, moveRabbit.junpCnt+1};
+		moveRabbit = { destPos.y, destPos.x, moveRabbit.pid, moveRabbit.junpCnt+1};			// logP
 		pq.push(moveRabbit);
 		jumpedRabbit[moveRabbit.pid] = moveRabbit;
 		scoreList[moveRabbit.pid] = scoreList[moveRabbit.pid] + addScore;
@@ -169,7 +169,7 @@ void move() {
 
 	// jumpedRabbit 중 우선순위 높은 토끼 S 더하기
 	priority_queue <rabbit, vector<rabbit>, compare2> jumpedRabbitLIst;
-	for (auto i : jumpedRabbit){
+	for (const auto &i : jumpedRabbit){
 		jumpedRabbitLIst.push(i.second);
 	}
 	rabbit scoreRabbit = jumpedRabbitLIst.top();
@@ -194,14 +194,11 @@ void solve() {
 			L = command[i][2];
 			changeDist();
 		}
-
-		int de = -1;
 	}
 
 	// 최고의 토끼 선정
 	long long answer = 0;
 	
-
 	for (auto i : scoreList){
 		int curPid = i.first;
 		long long curScore = maxScore - i.second + sList[curPid];
