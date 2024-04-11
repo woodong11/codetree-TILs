@@ -14,11 +14,9 @@ struct Node{
 int N, M, curTime = 1;
 int dy[4] = { -1, 0, 0, 1 };
 int dx[4] = { 0, -1, 1, 0 };
-int MAP[16][16];				// 이게 1이면 그쪽으로 이동 못함.
 int campMAP[16][16];			// 방문 안 한 곳이면 1, 방문 한 곳이면 2
 int visited[16][16];
 int isOnMAP[31];				// 사람이 격자 위에 있고 움직여야 하면 1, 없거나 도착했으면 0
-int isArrived[31];				// 자기 편의점 도착하면 1
 int arrivedCnt;					// 이게 m이 되면 종료한다.
 Node stores[31];
 Node people[31];
@@ -45,7 +43,7 @@ void input() {
 }
 
 // 최단거리로 한칸 움직이는 함수
-void bfs(int num) {
+int bfs(int num) {
 	Node person = people[num];
 	Node targetStore = stores[num];
 	int personDist = 21e8;
@@ -59,8 +57,8 @@ void bfs(int num) {
 		Node now = q.front();
 		q.pop();
 
-		if (visited[now.y][now.x] >= personDist)		// 시간을 줄여주기 위해 썼다
-			break;
+		//if (visited[now.y][now.x] >= personDist)		// 시간을 줄여주기 위해 썼다
+		//	break;
 
 		for (int i = 0; i < 4; i++) {
 			int ny = now.y + dy[i];
@@ -72,7 +70,7 @@ void bfs(int num) {
 			if ((ny == person.y) && (nx == person.x)) {
 				visited[ny][nx] = visited[now.y][now.x] + 1;
 				personDist = visited[ny][nx];
-				break;
+				return personDist;
 			}
 
 			if (campMAP[ny][nx] == 2 || visited[ny][nx] != 0)	// 방문 못하는곳이거나 체크한 곳이면 패스
@@ -82,17 +80,6 @@ void bfs(int num) {
 			visited[ny][nx] = visited[now.y][now.x] + 1;
 		}
 	}
-
-	for (int i = 0; i < 4; i++){
-		int ny = person.y + dy[i];
-		int nx = person.x + dx[i];
-		if (visited[ny][nx] == personDist - 1) {	// 사람 한칸 이동
-			people[num] = { ny, nx };
-			break;
-		}
-	}
-
-	int de = -1;
 }
 
 void movePeople() {
@@ -112,14 +99,25 @@ void movePeople() {
 		int curPerson = moveList[i];
 
 		// 최단거리까지 한칸 움직이기 
-		bfs(curPerson);
+		int personDist = bfs(curPerson);
+
+		// 사람 한칸 이동
+		for (int i = 0; i < 4; i++) {
+			int ny = people[curPerson].y + dy[i];
+			int nx = people[curPerson].x + dx[i];
+			if (visited[ny][nx] == personDist - 1) {	
+				people[curPerson] = { ny, nx };
+				break;
+			}
+		}
 
 		// 만약 편의점에 도착했다면 dontmove에 넣기
 		if ((people[curPerson].y == stores[curPerson].y) && (people[curPerson].x == stores[curPerson].x))
 			dontMove.push_back(curPerson);
 	}
 
-
+	if (dontMove.size() == 0)
+		return;
 
 	for (int i = 0; i < dontMove.size(); i++){
 		int stopPerson = dontMove[i];
@@ -127,8 +125,6 @@ void movePeople() {
 		isOnMAP[stopPerson] = 0;
 		campMAP[people[stopPerson].y][people[stopPerson].x] = 2;
 	}
-
-	int de = -1;
 }
 
 void insertPerson(int num) {
@@ -146,14 +142,14 @@ void insertPerson(int num) {
 		Node now = q.front();
 		q.pop();
 
-		if (visited[now.y][now.x] >= targetDist)		// 시간을 줄여주기 위해 썼다
-			break;
+		//if (visited[now.y][now.x] >= targetDist)		// 시간을 줄여주기 위해 썼다
+		//	break;
 
 		for (int i = 0; i < 4; i++) {
 			int ny = now.y + dy[i];
 			int nx = now.x + dx[i];
 
-			if (ny < 0 || nx < 0 || ny >= N || nx >= N)	// 격자 벗어나면 패스
+			if (ny < 0 || nx < 0 || ny >= N || nx >= N)		// 격자 벗어나면 패스
 				continue;
 
 			if (campMAP[ny][nx] == 1) {						// 캠프가 있으면 체크
