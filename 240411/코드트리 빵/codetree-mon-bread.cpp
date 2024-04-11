@@ -11,6 +11,12 @@ struct Node{
 	int x;
 };
 
+struct Node1 {
+	int y;
+	int x;
+	int dist;
+};
+
 int N, M, curTime = 1;
 int dy[4] = { -1, 0, 0, 1 };
 int dx[4] = { 0, -1, 1, 0 };
@@ -20,11 +26,13 @@ int isOnMAP[31];				// 사람이 격자 위에 있고 움직여야 하면 1, 없
 int arrivedCnt;					// 이게 m이 되면 종료한다.
 Node stores[31];
 Node people[31];
+vector <Node> targetCampList;
 
 bool compare(Node a, Node b) {
-	if (a.y == b.y)
-		return a.x < b.x;
-	return a.y < b.y;
+		if (a.y == b.y)
+			return a.x < b.x;
+		return a.y < b.y;
+	
 }
 
 void input() {
@@ -129,21 +137,24 @@ void movePeople() {
 
 void insertPerson(int num) {
 	Node targetStore = stores[num];
-	vector <Node> targetCampList;
+	targetCampList.clear();
 	int targetDist = 21e8;
+	int isfound = 0;
 
 	// bfs 돌리기
 	memset(visited, 0, sizeof(visited));
 	queue <Node> q;
 	q.push({ targetStore.y, targetStore.x });
 	visited[targetStore.y][targetStore.x] = 1;
+	int minDist = 21e8;
+	int isFirst = 0;
 
 	while (!q.empty()) {
 		Node now = q.front();
 		q.pop();
 
-		if (visited[now.y][now.x] >= targetDist)		// 시간을 줄여주기 위해 썼다
-			break;
+		//if (visited[now.y][now.x] >= targetDist)		// 시간을 줄여주기 위해 썼다
+		//	return;
 
 		for (int i = 0; i < 4; i++) {
 			int ny = now.y + dy[i];
@@ -152,10 +163,21 @@ void insertPerson(int num) {
 			if (ny < 0 || nx < 0 || ny >= N || nx >= N)		// 격자 벗어나면 패스
 				continue;
 
+			if (visited[ny][nx] != 0)
+				continue;
+
 			if (campMAP[ny][nx] == 1) {						// 캠프가 있으면 체크
-				targetCampList.push_back({ ny, nx });
+				if (isFirst == 0) {
+					minDist = visited[now.y][now.x] + 1;
+					isFirst = 1;
+				}
+				if (visited[now.y][now.x] + 1 == minDist) {
+					targetCampList.push_back({ ny, nx });
+				}
+					
+
 				visited[ny][nx] = visited[now.y][now.x] + 1;
-				targetDist = visited[ny][nx];
+				q.push({ ny, nx });
 				continue;
 			}
 
@@ -167,12 +189,7 @@ void insertPerson(int num) {
 		}
 	}
 
-	// 우선순위 높은 베이스캠프에 사람 넣고, 사람 위치와 보드 위에 있음, 다른 사람은 건너면 안됨
-	sort(targetCampList.begin(), targetCampList.end(), compare);
-	Node targetCamp = targetCampList[0];
-	people[num] = { targetCamp.y, targetCamp.x };
-	isOnMAP[num] = 1;
-	campMAP[targetCamp.y][targetCamp.x] = 2;
+	return;
 }
 
 void solve() {
@@ -184,6 +201,14 @@ void solve() {
 		movePeople();				// 1번, 2번
 		if (curTime <= M) {			// 3번
 			insertPerson(curTime);
+
+			// 우선순위 높은 베이스캠프에 사람 넣고, 사람 위치와 보드 위에 있음, 다른 사람은 건너면 안됨
+			sort(targetCampList.begin(), targetCampList.end(), compare);
+			Node targetCamp = targetCampList[0];
+			people[curTime] = { targetCamp.y, targetCamp.x };
+			isOnMAP[curTime] = 1;
+			campMAP[targetCamp.y][targetCamp.x] = 2;
+
 		}
 	
 		curTime++;
