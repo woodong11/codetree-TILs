@@ -142,8 +142,8 @@ void insertPerson(int num) {
 		Node now = q.front();
 		q.pop();
 
-		//if (visited[now.y][now.x] >= targetDist)		// 시간을 줄여주기 위해 썼다
-		//	break;
+		if (visited[now.y][now.x] >= targetDist)		// 시간을 줄여주기 위해 썼다
+			break;
 
 		for (int i = 0; i < 4; i++) {
 			int ny = now.y + dy[i];
