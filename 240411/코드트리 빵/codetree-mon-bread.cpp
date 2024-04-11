@@ -1,0 +1,206 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <cstring>
+#include <algorithm>
+using namespace std;
+
+struct Node{
+	int y;
+	int x;
+};
+
+int N, M, curTime = 1;
+int dy[4] = { -1, 0, 0, 1 };
+int dx[4] = { 0, -1, 1, 0 };
+int MAP[16][16];				// 이게 1이면 그쪽으로 이동 못함.
+int campMAP[16][16];			// 방문 안 한 곳이면 1, 방문 한 곳이면 2
+int visited[16][16];
+int isOnMAP[31];				// 사람이 격자 위에 있고 움직여야 하면 1, 없거나 도착했으면 0
+int isArrived[31];				// 자기 편의점 도착하면 1
+int arrivedCnt;					// 이게 m이 되면 종료한다.
+Node stores[31];
+Node people[31];
+
+bool compare(Node a, Node b) {
+	if (a.y == b.y)
+		return a.x < b.x;
+	return a.y < b.y;
+}
+
+void input() {
+	cin >> N >> M;
+	for (int i = 0; i < N; i++){
+		for (int j = 0; j < N; j++){
+			cin >> campMAP[i][j];
+		}
+	}
+
+	int tempY, tempX;
+	for (int i = 1; i <= M; i++){
+		cin >> tempY >> tempX;
+		stores[i] = { tempY-1, tempX-1 };
+	}
+}
+
+// 최단거리로 한칸 움직이는 함수
+void bfs(int num) {
+	Node person = people[num];
+	Node targetStore = stores[num];
+	int personDist = 21e8;
+
+	memset(visited, 0, sizeof(visited));
+	queue <Node> q;
+	q.push({ targetStore.y, targetStore.x });
+	visited[targetStore.y][targetStore.x] = 1;
+
+	while (!q.empty()) {
+		Node now = q.front();
+		q.pop();
+
+		if (visited[now.y][now.x] >= personDist)		// 시간을 줄여주기 위해 썼다
+			break;
+
+		for (int i = 0; i < 4; i++) {
+			int ny = now.y + dy[i];
+			int nx = now.x + dx[i];
+
+			if (ny < 0 || nx < 0 || ny >= N || nx >= N)		// 격자 벗어나면 패스
+				continue;
+
+			if ((ny == person.y) && (nx == person.x)) {
+				visited[ny][nx] = visited[now.y][now.x] + 1;
+				personDist = visited[ny][nx];
+				break;
+			}
+
+			if (campMAP[ny][nx] == 2 || visited[ny][nx] != 0)	// 방문 못하는곳이거나 체크한 곳이면 패스
+				continue;
+
+			q.push({ ny, nx });
+			visited[ny][nx] = visited[now.y][now.x] + 1;
+		}
+	}
+
+	for (int i = 0; i < 4; i++){
+		int ny = person.y + dy[i];
+		int nx = person.x + dx[i];
+		if (visited[ny][nx] == personDist - 1) {	// 사람 한칸 이동
+			people[num] = { ny, nx };
+			break;
+		}
+	}
+
+	int de = -1;
+}
+
+void movePeople() {
+
+	vector <int> moveList;
+	vector <int> dontMove;			// 해당 함수 끝나고 움직이지 못하는 곳 업데이트하기 위해 씀
+	for (int i = 1; i <= M; i++){
+		if (isOnMAP[i] == 1)
+			moveList.push_back(i);
+	}
+
+	if (moveList.size() == 0)
+		return;
+
+	// 움직여야 할 사람들이 있다면 최단거리로 움직이기
+	for (int i = 0; i < moveList.size(); i++){
+		int curPerson = moveList[i];
+
+		// 최단거리까지 한칸 움직이기 
+		bfs(curPerson);
+
+		// 만약 편의점에 도착했다면 dontmove에 넣기
+		if ((people[curPerson].y == stores[curPerson].y) && (people[curPerson].x == stores[curPerson].x))
+			dontMove.push_back(curPerson);
+	}
+
+
+
+	for (int i = 0; i < dontMove.size(); i++){
+		int stopPerson = dontMove[i];
+		arrivedCnt += 1;
+		isOnMAP[stopPerson] = 0;
+		campMAP[people[stopPerson].y][people[stopPerson].x] = 2;
+	}
+
+	int de = -1;
+}
+
+void insertPerson(int num) {
+	Node targetStore = stores[num];
+	vector <Node> targetCampList;
+	int targetDist = 21e8;
+
+	// bfs 돌리기
+	memset(visited, 0, sizeof(visited));
+	queue <Node> q;
+	q.push({ targetStore.y, targetStore.x });
+	visited[targetStore.y][targetStore.x] = 1;
+
+	while (!q.empty()) {
+		Node now = q.front();
+		q.pop();
+
+		if (visited[now.y][now.x] >= targetDist)		// 시간을 줄여주기 위해 썼다
+			break;
+
+		for (int i = 0; i < 4; i++) {
+			int ny = now.y + dy[i];
+			int nx = now.x + dx[i];
+
+			if (ny < 0 || nx < 0 || ny >= N || nx >= N)	// 격자 벗어나면 패스
+				continue;
+
+			if (campMAP[ny][nx] == 1) {						// 캠프가 있으면 체크
+				targetCampList.push_back({ ny, nx });
+				visited[ny][nx] = visited[now.y][now.x] + 1;
+				targetDist = visited[ny][nx];
+				continue;
+			}
+
+			if (campMAP[ny][nx] == 2 || visited[ny][nx] != 0)	// 방문 못하는곳이거나 체크한 곳이면 패스
+				continue;
+
+			q.push({ ny, nx });
+			visited[ny][nx] = visited[now.y][now.x] + 1;
+		}
+	}
+
+	// 우선순위 높은 베이스캠프에 사람 넣고, 사람 위치와 보드 위에 있음, 다른 사람은 건너면 안됨
+	sort(targetCampList.begin(), targetCampList.end(), compare);
+	Node targetCamp = targetCampList[0];
+	people[num] = { targetCamp.y, targetCamp.x };
+	isOnMAP[num] = 1;
+	campMAP[targetCamp.y][targetCamp.x] = 2;
+}
+
+void solve() {
+
+	while (1) {
+		if (arrivedCnt == M)
+			break;
+
+		movePeople();				// 1번, 2번
+		if (curTime <= M) {			// 3번
+			insertPerson(curTime);
+		}
+	
+		curTime++;
+	}
+
+	cout << curTime - 1;
+}
+
+
+int main() {
+	//freopen("sample_input.txt", "r", stdin);
+	input();
+	solve();
+
+	return 0;
+}
