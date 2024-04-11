@@ -91,6 +91,9 @@ int bfs(int num) {
             visited[ny][nx] = visited[now.y][now.x] + 1;
         }
     }
+
+
+    return visited[person.y][person.x];
 }
 
 void movePeople() {
@@ -116,6 +119,10 @@ void movePeople() {
         for (int i = 0; i < 4; i++) {
             int ny = people[curPerson].y + dy[i];
             int nx = people[curPerson].x + dx[i];
+
+            if (ny < 0 || nx < 0 || ny >= N || nx >= N)         // 이거때매 4시간 해맸음. 비주얼스튜디오 컴파일러는 맵 벗어낫을 때 자동으로 continue 하는 것 같은데, 서버 gcc는 안 그렇다
+                continue;
+
             if (visited[ny][nx] == personDist - 1) {
                 people[curPerson] = { ny, nx };
                 break;
@@ -205,15 +212,12 @@ void solve() {
             // 우선순위 높은 베이스캠프에 사람 넣고, 사람 위치와 보드 위에 있음, 다른 사람은 건너면 안됨
 
 
-
             sort(targetCampList.begin(), targetCampList.end(), compare);
             Node targetCamp = targetCampList[0];
 
             people[curTime] = { targetCamp.y, targetCamp.x };
             isOnMAP[curTime] = 1;
             campMAP[targetCamp.y][targetCamp.x] = 2;
-
-
         }
 
         curTime++;
