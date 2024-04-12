@@ -115,9 +115,9 @@ Node throwBall(int round) {
     round = round % (4 * N);
     if (round >= 1 && round <= N)
         startY = round - 1, startX = -1, ballDir = 0;
-    else if (round <= 2 * N)
+    else if (round >= N+1 && round <= 2 * N)
         startY = N, startX = round - N - 1, ballDir = 1;
-    else if (round <= 3 * N)
+    else if (round >= 2*N + 1 && round <= 3 * N)
         startY = (N - 1) - (round - 2 * N - 1), startX = N, ballDir = 2;
     else {
         if (round == 0)        // 0도 여기 포함되므로 편하게 변형했다.
@@ -166,9 +166,11 @@ int findOrder(int hitY, int hitX) {
                 continue;
             if (visited[next.y][next.x] == 1)
                 continue;
-            if (MAP[next.y][next.x] > 1 && MAP[next.y][next.x] < 4) {      // 다음칸에 사람이 있다면
+            if (MAP[next.y][next.x] == 2) {      // 다음칸에 사람이 있다면
                 break;
             }
+            if (MAP[cur.y][cur.x] == 2 && MAP[next.y][next.x] == 3)
+                break;
         }
 
         if (next.y == hitY && next.x == hitX) {
@@ -188,18 +190,19 @@ void hitBall(int hitY, int hitX) {
     answer += (orderNum * orderNum);
 
     //방향 바꾸기
-    int heatTeam = teamMAP[hitY][hitX];
-    Node headPerson = teamList[heatTeam][0];
-    Node tailPerson = teamList[heatTeam][1];
-    teamList[heatTeam][1] = { headPerson.y, headPerson.x };
-    teamList[heatTeam][0] = { tailPerson.y, tailPerson.x };
-    MAP[teamList[heatTeam][0].y][teamList[heatTeam][0].x] = 1;
-    MAP[teamList[heatTeam][1].y][teamList[heatTeam][1].x] = 3;
+    int hiTeam = teamMAP[hitY][hitX];
+    Node headPerson = teamList[hiTeam][0];
+    Node tailPerson = teamList[hiTeam][1];
+    teamList[hiTeam][1] = { headPerson.y, headPerson.x };
+    teamList[hiTeam][0] = { tailPerson.y, tailPerson.x };
+    MAP[teamList[hiTeam][0].y][teamList[hiTeam][0].x] = 1;
+    MAP[teamList[hiTeam][1].y][teamList[hiTeam][1].x] = 3;
 }
 
 void solve() {
 
     drawTeamMAP();
+
     for (int i = 1; i <= K; i++) {
 
         // 각 팀들 머리사람 따라 한칸 이동
