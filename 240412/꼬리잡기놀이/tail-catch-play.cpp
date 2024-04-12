@@ -7,9 +7,9 @@ using namespace std;
 
 int N, M, K;
 long long answer;
-int MAP[16][16];
-int teamMAP[16][16];    // 팀 번호 나타낸 맵 
-int visited[16][16];
+int MAP[21][21];
+int teamMAP[21][21];    // 팀 번호 나타낸 맵 
+int visited[21][21];
 int dy[4] = { 0, -1, 0, 1 };
 int dx[4] = { 1, 0, -1, 0 };
 
@@ -227,6 +227,8 @@ int main() {
     //freopen("sample_input.txt", "r", stdin);
 
     input();
+
+  
     solve();
 
     return 0;
