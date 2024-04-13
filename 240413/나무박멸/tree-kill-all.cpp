@@ -18,9 +18,9 @@ struct preTree {	// 나무 번식할때 필요한 구조체
 
 bool compare(Node a, Node b) {
 	if (a.y == b.y) {
-		return a.x > b.x;
+		return a.x < b.x;
 	}
-	return a.y > b.y;
+	return a.y < b.y;
 }
 
 int N, M, K, C, answer;
